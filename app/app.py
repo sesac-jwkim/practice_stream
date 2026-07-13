@@ -20,6 +20,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from xgboost import XGBClassifier, XGBRegressor
+from pathlib import Path
 
 
 ORANGE_XGBOOST_PARAMS = {
@@ -36,6 +37,7 @@ ORANGE_XGBOOST_PARAMS = {
     "n_jobs": -1,
     "eval_metric": "logloss",
 }
+DEFAULT_DATA_PATH = Path(__file__).with_name("baram_orange_group1_regression_half_sample.csv")
 
 
 st.set_page_config(page_title="Orange3 XGBoost Streamlit", layout="wide")
@@ -44,14 +46,19 @@ st.caption("Orange3 Gradient Boosting(xgboost) 파라미터 설정값을 동일�
 
 
 @st.cache_data
-def load_data(uploaded_file) -> pd.DataFrame:
-    name = uploaded_file.name.lower()
+def load_data(data_source) -> pd.DataFrame:
+    """업로드 파일 또는 GitHub 저장소에 포함된 기본 파일을 읽습니다."""
+    name = str(getattr(data_source, "name", data_source)).lower()
+
     if name.endswith(".csv"):
-        return pd.read_csv(uploaded_file)
+        return pd.read_csv(data_source)
+
     if name.endswith((".xlsx", ".xls")):
-        return pd.read_excel(uploaded_file)
+        return pd.read_excel(data_source)
+
     if name.endswith(".tab"):
-        return pd.read_csv(uploaded_file, sep="\t")
+        return pd.read_csv(data_source, sep="\t")
+
     raise ValueError("CSV, Excel, TAB 파일만 지원합니다.")
 
 
@@ -239,14 +246,26 @@ with st.sidebar:
         }
     )
 
-uploaded_file = st.file_uploader("분석할 데이터 파일을 업로드하세요", type=["csv", "xlsx", "xls", "tab"])
+uploaded_file = st.file_uploader(
+    "분석할 데이터 파일을 업로드하세요",
+    type=["csv", "xlsx", "xls", "tab"],
+)
 
-if uploaded_file is None:
-    st.info("Orange3에서 저장한 전체 테이블 파일(.csv, .xlsx, .tab)을 업로드하면 분석을 시작합니다.")
+if uploaded_file is not None:
+    data_source = uploaded_file
+    st.info(f"업로드한 파일을 사용합니다: {uploaded_file.name}")
+elif DEFAULT_DATA_PATH.exists():
+    data_source = DEFAULT_DATA_PATH
+    st.info(f"기본 데이터 파일을 사용합니다: {DEFAULT_DATA_PATH}")
+else:
+    st.warning(
+        "업로드한 파일이 없고 기본 데이터 파일도 없습니다. "
+        "GitHub 저장소에 data/default.csv를 올리거나 파일을 직접 업로드하세요."
+    )
     st.stop()
 
 try:
-    df = load_data(uploaded_file)
+    df = load_data(data_source)
 except Exception as exc:
     st.error(f"파일을 읽는 중 오류가 발생했습니다: {exc}")
     st.stop()
