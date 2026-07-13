@@ -40,7 +40,7 @@ ORANGE_XGBOOST_PARAMS = {
 
 st.set_page_config(page_title="Orange3 XGBoost Streamlit", layout="wide")
 st.title("Orange3 XGBoost 분석 앱")
-st.caption("Orange3 Gradient Boosting(xgboost) 설정값을 Streamlit + XGBoost 코드로 재현한 앱입니다.")
+st.caption("Orange3 Gradient Boosting(xgboost) 파라미터 설정값을 동일하게 설정하여 Streamlit + XGBoost으로 재현하여 동일한 값이 나왔습니다.")
 
 
 @st.cache_data
